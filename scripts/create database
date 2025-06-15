@@ -1,81 +1,129 @@
---USE master;
---GO
-
---Drop and recreate the 'DataWarehouse' database
-IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'DataWarehouse')        
-BEGIN
-    ALTER DATABASE datawarehouse SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE datawarehouse;        
-END
-GO
---CREATE DATABASE datawarehouse;
-
-USE datawarehouse;
-
-CREATE SCHEMA bronze;
-GO
-
-CREATE SCHEMA silver;
-GO
-
-CREATE SCHEMA gold;
-GO
 
 
-----The code below checks for a table and if seen drops it. U is for user definded table
--- and creates a new table with the same name.
---'U' stands for user defined table.
--- Uncomment if you have created the table before and want to drop it.
+    /*USE master;
+    GO
 
---IF OBJECT_ID ('bronze.crm_cust_info', 'U') IS NOT NULL 
-    --DROP TABLE bronze.crm_cust_info;
+    -- Drop and recreate AS the 'datawarehouse' database
+    IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'datawarehouse')        
+    BEGIN
+        ALTER DATABASE datawarehouse SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        DROP DATABASE datawarehouse;        
+    END
+    GO*/
 
-CREATE TABLE bronze.crm_cust_info(
-    cst_id INT,
-    cst_key VARCHAR(50),
-    cst_firstname NVARCHAR(50),
-    cst_lastname NVARCHAR(50),
-    cst_martital_status NVARCHAR(50),
-    cst_gndr NVARCHAR(50),
-    cst_create_date DATE 
-);
+    CREATE DATABASE datawarehouse;
+    GO
 
-CREATE TABLE bronze.crm_prd_info(
-    prd_id INT,
-    prd_key NVARCHAR(50),
-    prd_nm  NVARCHAR(50),
-    prd_cost INT,
-    prd_prd_line NVARCHAR(50),
-    prd_start_dt DATETIME,
-    prd_end_dt DATETIME
-);  
+    USE datawarehouse;
+    GO
 
-CREATE TABLE bronze.crm_sales_details(
-    sls_ord_num NVARCHAR(50),
-    sls_prd_key NVARCHAR(50),
-    sls_cst_id INT,
-    sls_order_dt INT,
-    sls_ship_dt INT,
-    sls_due_dt INT,
-    sls_sales INT,
-    sls_quantity INT,
-    sls_price INT
-);  
 
-CREATE TABLE bronze.erp_cust_az12(
-    cid NVARCHAR(50),
-    bdate DATE,
-    gen NVARCHAR(50),
+    CREATE SCHEMA bronze;
+    GO
+
+    CREATE SCHEMA silver;
+    GO
+
+    CREATE SCHEMA gold;
+    GO
+
+    --IF OBJECT_ID ('bronze.crm_cust_info', 'U') IS NOT NULL 
+        --DROP TABLE bronze.crm_cust_info;
+
+
+    CREATE TABLE bronze.crm_cust_info(
+        cst_id INT,
+        cst_key VARCHAR(50),
+        cst_firstname NVARCHAR(50),
+        cst_lastname NVARCHAR(50),
+        cst_martital_status NVARCHAR(50),
+        cst_gndr NVARCHAR(50),
+        cst_create_date DATE 
     );
 
-CREATE TABLE bronze.erp_loc_a101(
-    cid NVARCHAR(50),
-    cntry NVARCHAR(50)
+
+
+    CREATE TABLE bronze.crm_prd_info(
+        prd_id INT,
+        prd_key NVARCHAR(50),
+        prd_nm  NVARCHAR(50),
+        prd_cost INT,
+        prd_prd_line NVARCHAR(50),
+        prd_start_dt DATETIME,
+        prd_end_dt DATETIME
     );  
 
-CREATE TABLE bronze.erp_px_cat_g1v2(
-    id NVARCHAR(50),
-    cat NVARCHAR(50),
-    subcat NVARCHAR(50),
-    maintenance NVARCHAR(50)
-    );
+    CREATE TABLE bronze.crm_sales_details(
+        sls_ord_num NVARCHAR(50),
+        sls_prd_key NVARCHAR(50),
+        sls_cst_id INT,
+        sls_order_dt INT,
+        sls_ship_dt INT,
+        sls_due_dt INT,
+        sls_sales INT,
+        sls_quantity INT,
+        sls_price INT
+    );  
+
+    CREATE TABLE bronze.erp_cust_az12(
+        cid NVARCHAR(50),
+        bdate DATE,
+        gen NVARCHAR(50),
+        );
+
+    CREATE TABLE bronze.erp_loc_a101(
+        cid NVARCHAR(50),
+        cntry NVARCHAR(50)
+        );  
+
+    CREATE TABLE bronze.erp_px_cat_g1v2(
+        id NVARCHAR(50),
+        cat NVARCHAR(50),
+        subcat NVARCHAR(50),
+        maintenance NVARCHAR(50)
+        );
+
+
+EXEC bronze.load_bronze
+
+CREATE or ALTER procedure bronze.load_bronze AS
+BEGIN
+
+    DECLARE @START_TIME DATETIME, 
+            @END_TIME DATETIME,
+            @DURATION INT;
+
+
+    BEGIN TRY
+
+        PRINT'===================================================================================================';
+        PRINT' Loading Bronze layer';
+        PRINT'===================================================================================================';
+
+        SET @START_TIME = GETDATE();
+
+        PRINT '>> Truncate Table; bronze.crm_cust_info'; 
+        TRUNCATE TABLE bronze.crm_cust_info;
+
+        PRINT '>> Inserting data into: bronze.crm_cust_info';   
+        BULK INSERT bronze.crm_cust_info
+        FROM 'C:\Users\izubu\OneDrive\sql_project\sql-data-warehouse-project\datasets\cust_info.csv'
+        WITH (
+            FIELDTERMINATOR = ',',
+            FIRSTROW = 2,
+            TABLOCK
+        );
+        SET @END_TIME = GETDATE();
+        PRINT '>>LOAD DURATAION: ' + CAST(DATEDIFF(SECOND, @START_TIME, @END_TIME) AS NVARCHAR) + ' seconds';
+        ------------>>>>>  Do this for all the other tables   <<<<<<----------------
+
+    END TRY
+    BEGIN CATCH
+        PRINT '============================================================================================';   
+        PRINT 'Error occurred while loading bronze layer: ' + ERROR_MESSAGE()
+        PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS NVARCHAR);
+        PRINT 'Error STATEMENT: ' + CAST (ERROR_STATE() AS NVARCHAR);
+        PRINT '=============================================================================================';
+    END CATCH;
+
+END;
