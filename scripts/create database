@@ -1,20 +1,20 @@
 
 
-    /*USE master;
+        USE master;
     GO
 
     -- Drop and recreate AS the 'datawarehouse' database
-    IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'datawarehouse')        
+    IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'datawarehouse2')        
     BEGIN
-        ALTER DATABASE datawarehouse SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-        DROP DATABASE datawarehouse;        
+        ALTER DATABASE datawarehouse2 SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        DROP DATABASE datawarehouse2;        
     END
-    GO*/
-
-    CREATE DATABASE datawarehouse;
     GO
 
-    USE datawarehouse;
+    CREATE DATABASE datawarehouse2;
+    GO
+
+    USE datawarehouse2;
     GO
 
 
@@ -84,10 +84,13 @@
         );
 
 
-EXEC bronze.load_bronze
+--EXEC bronze.load_bronze
 
-CREATE or ALTER procedure bronze.load_bronze AS
+CREATE or ALTER procedure bronze.load_bronze 
+AS
+
 BEGIN
+
 
     DECLARE @START_TIME DATETIME, 
             @END_TIME DATETIME,
@@ -102,24 +105,135 @@ BEGIN
 
         SET @START_TIME = GETDATE();
 
-        PRINT '>> Truncate Table; bronze.crm_cust_info'; 
+        PRINT '>> Truncate Table; bronze.crm_cust_info <<'; 
         TRUNCATE TABLE bronze.crm_cust_info;
 
-        PRINT '>> Inserting data into: bronze.crm_cust_info';   
-        BULK INSERT bronze.crm_cust_info
-        FROM 'C:\Users\izubu\OneDrive\sql_project\sql-data-warehouse-project\datasets\cust_info.csv'
+		PRINT '>> Inserting data into: bronze.crm_cust_info <<'; 
+
+
+		BULK INSERT bronze.crm_cust_info
+        FROM 'C:\datasets\datasets\source_crm\cust_info.csv'
         WITH (
             FIELDTERMINATOR = ',',
             FIRSTROW = 2,
             TABLOCK
         );
-        SET @END_TIME = GETDATE();
-        PRINT '>>LOAD DURATAION: ' + CAST(DATEDIFF(SECOND, @START_TIME, @END_TIME) AS NVARCHAR) + ' seconds';
-        ------------>>>>>  Do this for all the other tables   <<<<<<----------------
 
-    END TRY
+		SET @END_TIME = GETDATE();
+		PRINT '>>LOAD DURATAION: ' + CAST(DATEDIFF(SECOND, @START_TIME, @END_TIME) AS NVARCHAR) + ' seconds';
+
+		PRINT '===============================================================================================';
+
+
+		PRINT '>> Truncate Table; bronze.crm_prd_info <<'; 
+		TRUNCATE TABLE bronze.crm_prd_info;
+
+		PRINT '>> Inserting data into: bronze.crm_prd_info <<'; 
+
+
+		BULK INSERT bronze.crm_prd_info
+        FROM 'C:\datasets\datasets\source_crm\prd_info.csv'
+        WITH (
+            FIELDTERMINATOR = ',',
+            FIRSTROW = 2,
+            TABLOCK
+        );
+
+	SET @END_TIME = GETDATE();
+    PRINT '>>LOAD DURATAION: ' + CAST(DATEDIFF(SECOND, @START_TIME, @END_TIME) AS NVARCHAR) + ' seconds';
+
+
+
+	PRINT '===============================================================================================';
+
+	PRINT '>> Truncate Table; bronze.crm_sales_details <<'; 
+    TRUNCATE TABLE bronze.crm_sales_details;
+
+
+	PRINT '>> Inserting data into: bronze.crm_sales_details <<'; 
+
+
+
+		BULK INSERT bronze.crm_sales_details
+        FROM 'C:\datasets\datasets\source_crm\sales_details.csv'
+        WITH (
+            FIELDTERMINATOR = ',',
+            FIRSTROW = 2,
+            TABLOCK
+        );
+
+	SET @END_TIME = GETDATE();
+    PRINT '>>LOAD DURATAION: ' + CAST(DATEDIFF(SECOND, @START_TIME, @END_TIME) AS NVARCHAR) + ' seconds';
+
+
+
+	PRINT '===============================================================================================';
+
+
+	PRINT '>> Truncate Table; bronze.erp_cust_az12 <<'; 
+    TRUNCATE TABLE bronze.erp_cust_az12;
+
+	PRINT '>> Inserting data into: bronze.erp_cust_az12 <<'; 
+
+
+		BULK INSERT bronze.erp_cust_az12
+        FROM 'C:\datasets\datasets\source_erp\CUST_AZ12.csv'
+        WITH (
+            FIELDTERMINATOR = ',',
+            FIRSTROW = 2,
+            TABLOCK
+        );
+
+	SET @END_TIME = GETDATE();
+    PRINT '>>LOAD DURATAION: ' + CAST(DATEDIFF(SECOND, @START_TIME, @END_TIME) AS NVARCHAR) + ' seconds';
+
+
+	PRINT '===============================================================================================';
+
+
+	PRINT '>> Truncate Table; bronze.erp_loc_a101 <<'; 
+    TRUNCATE TABLE bronze.erp_loc_a101;
+
+	PRINT '>> Inserting data into: bronze.erp_loc_a101 <<'; 
+
+		BULK INSERT bronze.erp_loc_a101
+        FROM 'C:\datasets\datasets\source_erp\LOC_A101.csv'
+        WITH (
+            FIELDTERMINATOR = ',',
+            FIRSTROW = 2,
+            TABLOCK
+        );
+
+	SET @END_TIME = GETDATE();
+    PRINT '>>LOAD DURATAION: ' + CAST(DATEDIFF(SECOND, @START_TIME, @END_TIME) AS NVARCHAR) + ' seconds';
+
+
+
+	PRINT '================================================================================================';
+
+	PRINT '>> Truncate Table; bronze.erp_px_cat_g1v2 <<'; 
+    TRUNCATE TABLE bronze.erp_px_cat_g1v2;
+
+	PRINT '>> Inserting data into: bronze.erp_px_cat_g1v2 <<'; 
+
+		BULK INSERT bronze.erp_px_cat_g1v2
+        FROM 'C:\datasets\datasets\source_erp\PX_CAT_G1V2.csv'
+        WITH (
+            FIELDTERMINATOR = ',',
+            FIRSTROW = 2,
+            TABLOCK
+        );
+
+	SET @END_TIME = GETDATE();
+    PRINT '>>LOAD DURATAION: ' + CAST(DATEDIFF(SECOND, @START_TIME, @END_TIME) AS NVARCHAR) + ' seconds';
+
+
+	PRINT '=================================================================================================';
+
+
+END TRY
     BEGIN CATCH
-        PRINT '============================================================================================';   
+        PRINT '=============================================================================================';   
         PRINT 'Error occurred while loading bronze layer: ' + ERROR_MESSAGE()
         PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS NVARCHAR);
         PRINT 'Error STATEMENT: ' + CAST (ERROR_STATE() AS NVARCHAR);
@@ -127,3 +241,4 @@ BEGIN
     END CATCH;
 
 END;
+		      
