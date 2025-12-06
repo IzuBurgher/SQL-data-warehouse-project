@@ -1,19 +1,18 @@
     USE master;
-
     GO
 
     -- Drop and recreate AS the 'datawarehouse' database
-    IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'datawarehouse2')        
+    IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'datawarehouse')        
     BEGIN
-        ALTER DATABASE datawarehouse2 SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-        DROP DATABASE datawarehouse2;        
+        ALTER DATABASE datawarehouse SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        DROP DATABASE datawarehouse;        
     END
     GO
 
-    CREATE DATABASE datawarehouse2;
+    CREATE DATABASE datawarehouse;
     GO
 
-    USE datawarehouse2;
+    USE datawarehouse;
     GO
 
 
@@ -22,6 +21,5 @@
 
     CREATE SCHEMA silver;
     GO
-
     CREATE SCHEMA gold;
     GO
